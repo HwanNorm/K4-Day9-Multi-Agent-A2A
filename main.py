@@ -32,9 +32,10 @@ def main():
 
         case_id = case.get("case_id")
         
-        # Pipeline Flow: Coordinator -> Policy Agent -> Verifier Agent
+        # Pipeline Flow: Coordinator -> Policy Agent (rule engine + LLM cross-check) -> Verifier Agent
         evidence = gather_evidence(data, case)
         draft_output = apply_policy(evidence)
+        llm_meta = draft_output.get("_llm_meta", {})
         final_output = verify(draft_output)
 
         # Write output file
@@ -44,13 +45,18 @@ def main():
 
         duration = round(time.time() - case_start, 3)
 
-        # Record Trace
+        # Record Trace (includes Policy Agent <-> LLM cross-check handoff)
         trace_item = {
             "case_id": case_id,
             "claimed_order_id": case.get("customer_request", {}).get("claimed_order_id"),
             "primary_issue": final_output["case_assessment"]["primary_issue"],
             "case_status": final_output["case_assessment"]["case_status"],
             "recommended_refund_brl": final_output["financial_resolution"]["recommended_refund_brl"],
+            "confidence": final_output["case_assessment"]["confidence"],
+            "llm_called": llm_meta.get("called", False),
+            "llm_agrees_with_rule_engine": llm_meta.get("agrees"),
+            "llm_primary_issue": llm_meta.get("llm_primary_issue"),
+            "llm_reasoning": llm_meta.get("reasoning"),
             "duration_seconds": duration,
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
         }

@@ -1,8 +1,18 @@
 {
-  "model": "llama-3.1-8b-instant",
-  "parameter_size": "<=10B",
-  "framework": "Custom Python Multi-Agent Architecture",
-  "runtime": "Python 3.11",
-  "provider": "Groq API / Deterministic Rule Engine",
+  "agents": {
+    "customer_agent": {"model": "none (deterministic pandas lookup)", "parameter_size": null},
+    "order_product_agent": {"model": "none (deterministic pandas lookup)", "parameter_size": null},
+    "payment_agent": {"model": "none (deterministic arithmetic)", "parameter_size": null},
+    "delivery_agent": {"model": "none (deterministic arithmetic)", "parameter_size": null},
+    "policy_agent": {
+      "model": "llama-3.1-8b-instant",
+      "parameter_size": "8B",
+      "provider": "Groq API",
+      "role": "Independent LLM cross-check of the deterministic EC_POLICY_V2 rule engine; informs confidence score"
+    },
+    "verifier_agent": {"model": "none (deterministic schema/limit validation)", "parameter_size": null}
+  },
+  "framework": "Custom Python Multi-Agent Architecture (Supervisor-Worker)",
+  "runtime": "Python 3.14",
   "total_cases_processed": 50
 }

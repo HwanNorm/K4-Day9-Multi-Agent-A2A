@@ -6,7 +6,7 @@
       "multi_item_order"
     ],
     "case_status": "action_required",
-    "confidence": 0.95
+    "confidence": 0.97
   },
   "affected_entities": {
     "order_ids": [
@@ -35,7 +35,7 @@
       "c3a52053718435a35e070b991ff546ec"
     ],
     "category_names": [
-      "housewares"
+      "utilidades_domesticas"
     ]
   },
   "delivery_analysis": {
