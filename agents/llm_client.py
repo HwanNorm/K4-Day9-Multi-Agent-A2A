@@ -13,8 +13,8 @@ load_dotenv()
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 # All models below are <=10B parameters.
-MODEL_REASONING = "llama-3.1-8b-instant"   # used by Policy Agent (needs rule reasoning)
-MODEL_LIGHT = "gemma2-9b-it"                # used by lighter narration/explanation tasks
+MODEL_REASONING = "gemma2-9b-it"   # used by Policy Agent (needs rule reasoning)
+MODEL_LIGHT = "gemma2-9b-it"       # used by lighter narration/explanation tasks
 
 
 def call_llm(system_prompt: str, user_prompt: str, model: str, temperature: float = 0.0) -> str:

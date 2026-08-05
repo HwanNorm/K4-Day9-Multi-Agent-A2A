@@ -1,6 +1,6 @@
 {
-  "model": "llama-3.1-8b-instant",
-  "parameter_size": "<=10B",
+  "model": "gemma2-9b-it",
+  "parameter_size": "<=10B (9B)",
   "framework": "Custom Python Multi-Agent Architecture",
   "runtime": "Python 3.11",
   "provider": "Groq API / Deterministic Rule Engine",
