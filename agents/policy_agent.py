@@ -15,8 +15,11 @@ def apply_policy(evidence: Dict[str, Any]) -> Dict[str, Any]:
     order_id = evidence.get("order_id")
     order_status = evidence.get("order_status")
     
-    delivery = evidence.get("delivery_analysis", {})
-    payment = evidence.get("payment_reconciliation", {})
+    # Support both coordinator dict schemas (nested under subkeys or flat)
+    delivery = evidence.get("delivery") or evidence.get("delivery_analysis", {})
+    payment = evidence.get("payment") or evidence.get("payment_reconciliation", {})
+    order_prod = evidence.get("order_product") or {}
+    customer = evidence.get("customer") or evidence.get("customer_context", {})
     
     delivered_at = delivery.get("delivered_at")
     estimated_delivery_at = delivery.get("estimated_delivery_at")
@@ -26,11 +29,16 @@ def apply_policy(evidence: Dict[str, Any]) -> Dict[str, Any]:
     payment_total_brl = payment.get("payment_total_brl", 0.0) or 0.0
     freight_total_brl = payment.get("freight_total_brl", 0.0) or 0.0
     reconciled = payment.get("reconciled")
-    payment_ids = evidence.get("affected_entities", {}).get("payment_ids", [])
-    item_ids = evidence.get("affected_entities", {}).get("item_ids", [])
-    seller_ids = evidence.get("affected_entities", {}).get("seller_ids", [])
-    category_names = evidence.get("product_context", {}).get("category_names", [])
-    repeat_customer = evidence.get("customer_context", {}).get("repeat_customer", False)
+    
+    payment_ids = payment.get("payment_ids") or evidence.get("affected_entities", {}).get("payment_ids", [])
+    item_ids = order_prod.get("item_ids") or evidence.get("affected_entities", {}).get("item_ids", [])
+    seller_ids = order_prod.get("seller_ids") or evidence.get("affected_entities", {}).get("seller_ids", [])
+    product_ids = order_prod.get("product_ids") or evidence.get("product_context", {}).get("product_ids", [])
+    category_names = order_prod.get("category_names") or evidence.get("product_context", {}).get("category_names", [])
+    
+    customer_unique_id = customer.get("customer_unique_id")
+    related_order_ids = customer.get("related_order_ids", [])
+    repeat_customer = customer.get("repeat_customer", False)
     
     is_late_delivery = False
     if delivered_at and estimated_delivery_at:
@@ -88,7 +96,7 @@ def apply_policy(evidence: Dict[str, Any]) -> Dict[str, Any]:
         recommended_refund_brl = 0.0
         primary_action = "explain_valid_split_payment"
 
-    # 6. unsupported_late_claim (Default / Catch-all fallback)
+    # 6. unsupported_late_claim
     else:
         primary_issue = "unsupported_late_claim"
         cause_code = "DELIVERY_WITHIN_ESTIMATE"
@@ -96,7 +104,6 @@ def apply_policy(evidence: Dict[str, Any]) -> Dict[str, Any]:
         recommended_refund_brl = 0.0
         primary_action = "reject_late_refund"
 
-    # Case Status
     case_status = "action_required" if recommended_refund_brl > 0 else "no_action"
     
     # Secondary Issues (Strict order)
@@ -142,7 +149,6 @@ def apply_policy(evidence: Dict[str, Any]) -> Dict[str, Any]:
     if cause_code:
         evidence_ids.append(f"policy:{cause_code}")
 
-    # Deduplicate while preserving order
     seen = set()
     unique_evidence_ids = []
     for eid in evidence_ids:
@@ -158,22 +164,38 @@ def apply_policy(evidence: Dict[str, Any]) -> Dict[str, Any]:
             "case_status": case_status,
             "confidence": 0.95,
         },
-        "affected_entities": evidence.get("affected_entities", {
-            "order_ids": [order_id] if order_id else [],
+        "affected_entities": {
+            "order_ids": [order_id] if order_id and evidence.get("order_exists", True) else [],
             "item_ids": item_ids,
             "seller_ids": seller_ids,
             "payment_ids": payment_ids,
-        }),
+        },
         "customer_context": {
-            "customer_unique_id": evidence.get("customer_context", {}).get("customer_unique_id"),
-            "related_order_ids": evidence.get("customer_context", {}).get("related_order_ids", []),
+            "customer_unique_id": customer_unique_id,
+            "related_order_ids": related_order_ids,
         },
         "product_context": {
-            "product_ids": evidence.get("product_context", {}).get("product_ids", []),
+            "product_ids": product_ids,
             "category_names": category_names,
         },
-        "delivery_analysis": delivery,
-        "payment_reconciliation": payment,
+        "delivery_analysis": {
+            "delivered_at": delivery.get("delivered_at"),
+            "estimated_delivery_at": delivery.get("estimated_delivery_at"),
+            "carrier_handoff_at": delivery.get("carrier_handoff_at"),
+            "delivery_variance_hours": delivery.get("delivery_variance_hours"),
+            "seller_handoff_analysis": delivery.get("seller_handoff_analysis", []),
+            "late_handoff_seller_ids": late_handoff_seller_ids,
+        },
+        "payment_reconciliation": {
+            "currency": "BRL",
+            "item_total_brl": payment.get("item_total_brl"),
+            "freight_total_brl": payment.get("freight_total_brl"),
+            "expected_total_brl": payment.get("expected_total_brl"),
+            "payment_total_brl": payment.get("payment_total_brl"),
+            "difference_brl": payment.get("difference_brl"),
+            "reconciled": payment.get("reconciled"),
+            "payment_types": payment.get("payment_types", []),
+        },
         "root_cause_analysis": {
             "ranked_causes": [{"cause_code": cause_code, "rank": 1}],
             "responsible_parties": responsible_parties,

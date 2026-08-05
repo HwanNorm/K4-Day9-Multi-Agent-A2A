@@ -3,7 +3,7 @@ import json
 import time
 from pathlib import Path
 from agents.data_loader import OlistData
-from agents.coordinator import collect_evidence
+from agents.coordinator import gather_evidence
 from agents.policy_agent import apply_policy
 from agents.verifier_agent import verify
 
@@ -33,7 +33,7 @@ def main():
         case_id = case.get("case_id")
         
         # Pipeline Flow: Coordinator -> Policy Agent -> Verifier Agent
-        evidence = collect_evidence(data, case)
+        evidence = gather_evidence(data, case)
         draft_output = apply_policy(evidence)
         final_output = verify(draft_output)
 
