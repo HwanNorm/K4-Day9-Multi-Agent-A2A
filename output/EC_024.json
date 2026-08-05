@@ -6,7 +6,7 @@
       "multi_item_order"
     ],
     "case_status": "action_required",
-    "confidence": 0.95
+    "confidence": 0.97
   },
   "affected_entities": {
     "order_ids": [
@@ -32,7 +32,7 @@
       "dc2410804cf782c5d87dbcd201b74e9b"
     ],
     "category_names": [
-      "computers_accessories"
+      "informatica_acessorios"
     ]
   },
   "delivery_analysis": {

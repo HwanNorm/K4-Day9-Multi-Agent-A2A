@@ -11,6 +11,9 @@ VALID_EVIDENCE_PREFIXES = ("order:", "item:", "payment:", "seller:", "policy:")
 def verify(draft_output: Dict[str, Any]) -> Dict[str, Any]:
     """Verifies and sanitizes draft_output dict to produce final_json."""
     output = dict(draft_output)
+    # Internal Policy Agent <-> LLM cross-check metadata never belongs in the
+    # schema-compliant output file.
+    output.pop("_llm_meta", None)
 
     # 1. Enforce Case Assessment limits and confidence bounds
     assessment = output.get("case_assessment", {})

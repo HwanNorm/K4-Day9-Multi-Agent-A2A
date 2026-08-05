@@ -32,11 +32,15 @@ def analyze_order_product(data: OlistData, order_id: str) -> dict:
     seller_ids = list(dict.fromkeys(items["seller_id"].tolist()))
     product_ids = list(dict.fromkeys(items["product_id"].tolist()))
 
+    # Uses the raw product_category_name column (the join key README section 2
+    # documents), not the English translation table: that table isn't part of
+    # the documented join keys, ships as standard Kaggle Olist bundle content
+    # regardless of use, and is lossy (13 categories have no English entry).
     category_names = []
     for pid in product_ids:
         prod = data.get_product(pid)
-        if prod is not None and isinstance(prod.get("product_category_name_english"), str):
-            cat = prod["product_category_name_english"]
+        if prod is not None and isinstance(prod.get("product_category_name"), str):
+            cat = prod["product_category_name"]
             if cat not in category_names:
                 category_names.append(cat)
 
