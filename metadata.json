@@ -1,4 +1,7 @@
 {
+  "cohort": "K4",
+  "repo_starter": "https://github.com/HwanNorm/K4-Day9-Multi-Agent-A2A",
+  "policy_version": "EC_POLICY_V2",
   "agents": {
     "customer_agent": {"model": "none (deterministic pandas lookup)", "parameter_size": null},
     "order_product_agent": {"model": "none (deterministic pandas lookup)", "parameter_size": null},
